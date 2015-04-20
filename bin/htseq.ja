@@ -8,8 +8,8 @@
 #### -W is wall clock for the job -W hh:mm -W 24:00 for  24hrs, you must specify -W option
 #BSUB -W 24:00  
 #Standard output and standard error (%J is for jobid)
-#BSUB -o /labs/lfo21/Ayman/GBM/tophat/STD/job.out 
-#BSUB -e /labs/lfo21/Ayman/GBM/tophat/STD/job.err
+#BSUB -o /labs/lfo21/Ayman/GBM/rawcounts/STD/job.out 
+#BSUB -e /labs/lfo21/Ayman/GBM/rawcounts/STD/job.err
 
 
 #### Application should be provided run "bapp" to find out the application if not listed you can use "-app default" or send us request.
@@ -17,21 +17,25 @@
 #BSUB -app default 
 
 #### -P is for project you must specify the project_name  like (appliciation_project you are working on) eg. -P fluent_fuelcomubsion
-#BSUB -P GBM_tophat
-#BSUB -J "gbm[1-6]%6" GBM_txindex
+#BSUB -P GBM_htseq
+#BSUB -J "gbm[1-160]%160" GBM_htseq
 echo "[`date`] $LSB_JOBINDEX"
 ####  Please make sure to load all the require modules for the job
-
-####  Use /scartch dir for scratch or temp filesystem if your job is I/O intensive
+module load gcc 
+module load atlas
+module load python
+module load samtools
 export PATH="$PATH:/home/khodieaf/bin"
 
+####  Use /scartch dir for scratch or temp filesystem if your job is I/O intensive
+
+tophatout="/labs/lfo21/Ayman/GBM/tophat/out.dirs"
+srr="`sed -n "$LSB_JOBINDEX"p $tophatout`"
+bamfile="/labs/lfo21/Ayman/GBM/tophat/$srr/accepted_hits.bam"
+sortedbam="/labs/lfo21/Ayman/GBM/tophat/$srr/sorted_hits.bam"
 refgenome="/labs/lfo21/Ayman/RefGenomeUCSC/Homo_sapiens/UCSC/hg19/Annotation/Genes/genes.gtf"
-bindex="/labs/lfo21/Ayman/RefGenomeUCSC/Homo_sapiens/UCSC/hg19/Sequence/Bowtie2Index/genome"
-tindex="/labs/lfo21/Ayman/GBM/tophat_index/txome"
-fastq="/labs/lfo21/Ayman/GBM/fastq/fastq.files_R"
-file="`sed -n "$LSB_JOBINDEX"p $fastq`"
-bname=${file%.*}
-fastqdir="/labs/lfo21/Ayman/GBM/fastq"
-outdir="/labs/lfo21/Ayman/GBM/tophat/$bname"
+outdir="/labs/lfo21/Ayman/GBM/rawcounts/$srr"
+
 mkdir -p $outdir
-tophat -o $outdir -p 16 --solexa-quals --library-type fr-unstranded -G $refgenome --transcriptome-index=$tindex $bindex $fastqdir/$file
+samtools sort -m 8G $bamfile $sortedbam 
+htseq-count -m union -t exon -i gene_id -f bam -r pos -s yes $sortedbam $refgen > $outdir
