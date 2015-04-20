@@ -1,0 +1,31 @@
+#!/bin/bash -l
+####Example bsub_script 
+####pick one of the applicable queue from above list of queues
+#BSUB -q smp
+####  -n <core> Number cores require to run this job
+#BSUB -n 1
+#               
+#### -W is wall clock for the job -W hh:mm -W 24:00 for  24hrs, you must specify -W option
+#BSUB -W 300:00  
+#Standard output and standard error (%J is for jobid)
+#BSUB -o /labs/lfo21/Ayman/GBM/fastq/STD/job.out 
+#BSUB -e /labs/lfo21/Ayman/GBM/fastq/STD/job.err
+
+
+#### Application should be provided run "bapp" to find out the application if not listed you can use "-app default" or send us request.
+ 
+#BSUB -app default 
+
+#### -P is for project you must specify the project_name  like (appliciation_project you are working on) eg. -P fluent_fuelcomubsion
+#BSUB -P GBM_sra2fastq
+#BSUB -J "gbm[1-80]%80" GBM_sra2fastq
+echo "`date`:$LSB_JOBINDEX"
+####  Please make sure to load all the require modules for the job
+
+####  Use /scartch dir for scratch or temp filesystem if your job is I/O intensive
+export PATH="$PATH:/home/khodieaf/bin"
+srafiles="/labs/lfo21/Ayman/GBM/SRR/sra_files.txt"
+file="`sed -n "$LSB_JOBINDEX"p $srafiles`"
+sradir="/labs/lfo21/Ayman/GBM/SRR"
+outdir="/labs/lfo21/Ayman/GBM/fastq"
+fastq-dump --split-3 -O $outdir $sradir/$file
