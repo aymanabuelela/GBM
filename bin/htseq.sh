@@ -19,20 +19,20 @@ fi
 
 htseqFun () 
 {       
-    samtools sort -m $2"G" $4/$i/"accepted_hits.bam" $5/$i".sorted" \
+    samtools sort -m $1"G" $2/$i/"accepted_hits.bam" $3/$i".sorted" \
     && htseq-count -m union -t exon -i gene_id -f bam -r pos -s yes \
-        $5/$i".sorted.bam" $6 > $7/$i".txt" \
-    && rm $5/$i".sorted.bam" &
+        $3/$i".sorted.bam" $4 > $5/$i".txt" \
+    && rm $3/$i".sorted.bam" &
 }
 
 while read i; do
     echo "[$i] `date`"
 
     if [ $cnt -lt $np ]; then
-        htseqFun
+        htseqFun $2 $4 $5 $6 $7
         cnt=$(($cnt+1))
     else
-        htseqFun
+        htseqFun $2 $4 $5 $6 $7
         wait
         cnt=1
     fi
